@@ -1,6 +1,3 @@
-## Needs to be run from VRF with internet access.
-# Grab username that made config change and store as variable.
-#     if diff, then 'Configured by $USER at $IPADDR\n'+diff
 import subprocess
 import webhook
 import jsonrpclib
