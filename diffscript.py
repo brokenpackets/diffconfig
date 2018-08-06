@@ -1,6 +1,6 @@
 ## Needs to be run from VRF with internet access.
 # Grab username that made config change and store as variable.
-#     if diff, then 'Configuration changed by $USER\n'+diff
+#     if diff, then 'Configured by $USER at $IPADDR\n'+diff
 import subprocess
 import webhook
 import jsonrpclib
@@ -9,7 +9,14 @@ import socket
 import re
 
 '''
-Example switch config:
+Requirements:
+  DNS Reachability to resolve webhook target (if applicable)
+  HTTPS Reachability to webhook target
+  diffscript.py and webhook.py stored under /mnt/flash/
+  event-handler configured to watch syslog for 'Configured from console by'
+  
+Example switch config, assumes sourcing from MGMT VRF. If not needing 
+to source from a VRF, use 'action bash python /mnt/flash/diffscript.py'
 
 event-handler CONFIGCHANGE
    action bash ip netns exec ns-MGMT python /mnt/flash/diffscript.py
@@ -19,6 +26,10 @@ event-handler CONFIGCHANGE
    !
    trigger on-logging
       regex Configured from console by
+
+management api http-commands
+  no shutdown
+  protocol unix-socket
 '''
 
 log_message = ''
