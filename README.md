@@ -1,7 +1,7 @@
 # diffconfig
 Watches for local configuration changes, performs a diff of new vs old config, and sends to slack.
 
-Requirements:
+Requirements:  
   DNS Reachability to resolve webhook target (if applicable)   
   HTTPS Reachability to webhook target   
   diffscript.py and webhook.py stored under /mnt/flash/   
