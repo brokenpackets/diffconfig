@@ -2,12 +2,12 @@
 Watches for local configuration changes, performs a diff of new vs old config, and sends to slack.
 
 Requirements:
-  DNS Reachability to resolve webhook target (if applicable)
-  HTTPS Reachability to webhook target
-  diffscript.py and webhook.py stored under /mnt/flash/
-  event-handler configured to watch syslog for 'Configured from console by'
-  protocol unix-socket enabled for eAPI
-  
+  DNS Reachability to resolve webhook target (if applicable)   
+  HTTPS Reachability to webhook target   
+  diffscript.py and webhook.py stored under /mnt/flash/   
+  event-handler configured to watch syslog for 'Configured from console by'   
+  protocol unix-socket enabled for eAPI   
+   
 Example switch config, assumes sourcing from MGMT VRF. If not needing 
 to source from a VRF, use 'action bash python /mnt/flash/diffscript.py'
 ```
