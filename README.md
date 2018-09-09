@@ -1,24 +1,24 @@
 # diffconfig
-Watches for local configuration changes, performs a diff of new vs old config, and sends to desired notification method. Currently supports slack (webhook), sendgrid, and SMTP/Email.
+Watches for local configuration changes, performs a diff of new vs old config, and sends to desired notification method. Currently supports slack (webhook), sendgrid, and SMTP/Email.  
 
 Requirements:
-  DNS Reachability to resolve webhook target (if applicable)
-  HTTPS Reachability to webhook target
-  diffscript.py stored under /mnt/flash/
-  event-handler configured to watch syslog for 'Configured from console by'
-  protocol unix-socket enabled for eAPI
+  DNS Reachability to resolve webhook target (if applicable)  
+  HTTPS Reachability to webhook target  
+  diffscript.py stored under /mnt/flash/  
+  event-handler configured to watch syslog for 'Configured from console by'  
+  protocol unix-socket enabled for eAPI  
   
----Notification Methods---
-Slack Notification:
-  webhook.py python module stored under /mnt/flash/
-Sendgrid Notification:
-  Sendgrid python module
-    Install on switch with 'sudo pip install sendgrid' - may need to run
-    from management VRF - sudo ip netns exec ns-{MGMTVRF} pip install sendgrid
-    Sendgrid Note: Settings > Mail Settings > Plain Content (Activate) will
-      allow you to send as true plaintext (keeps formatting).
-Standard SMTP Email notification:
-  uses EOS email client, example config:
+---Notification Methods---  
+Slack Notification:  
+  webhook.py python module stored under /mnt/flash/  
+Sendgrid Notification:  
+  Sendgrid python module  
+    Install on switch with 'sudo pip install sendgrid' - may need to run  
+    from management VRF - sudo ip netns exec ns-{MGMTVRF} pip install sendgrid  
+    Sendgrid Note: Settings > Mail Settings > Plain Content (Activate) will  
+      allow you to send as true plaintext (keeps formatting).  
+Standard SMTP Email notification:  
+  uses EOS email client, example config:  
 ```
      email
        from-user Arista-7@example.com
@@ -27,9 +27,9 @@ Standard SMTP Email notification:
        auth password pass
        tls
 ```
----------------------------
-Example switch config, assumes sourcing from MGMT VRF. If not needing
-to source from a VRF, use 'action bash python /mnt/flash/diffscript.py'
+---------------------------  
+Example switch config, assumes sourcing from MGMT VRF. If not needing  
+to source from a VRF, use 'action bash python /mnt/flash/diffscript.py'  
 ```
 event-handler CONFIGCHANGE
    action bash ip netns exec ns-MGMT python /mnt/flash/diffscript.py
