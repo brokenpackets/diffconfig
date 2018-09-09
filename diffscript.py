@@ -36,7 +36,7 @@ Sendgrid Notification:
 Standard SMTP Email notification:
   uses EOS email client, example config:
     email
-       from-user Arista-7@brokenpackets.com
+       from-user Arista-7@example.com
        server vrf MGMT smtp.sendgrid.net:587
        auth username user
        auth password pass
