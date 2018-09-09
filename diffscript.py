@@ -7,9 +7,9 @@ import os
 import socket
 import re
 ### Define transport:
-notifytype = 'email' # 'email' or 'slack'
+notifytype = 'email' # 'email', 'slack', or 'sendgrid'
 
-if notifytype == 'email':
+if notifytype == 'sendgrid':
     import sendgrid
     from sendgrid.helpers.mail import *
 
@@ -23,16 +23,26 @@ Requirements:
   diffscript.py stored under /mnt/flash/
   event-handler configured to watch syslog for 'Configured from console by'
   protocol unix-socket enabled for eAPI
+
+---Notification Methods---
 Slack Notification:
   webhook.py python module stored under /mnt/flash/
-Email Notification:
+Sendgrid Notification:
   Sendgrid python module
     Install on switch with 'sudo pip install sendgrid' - may need to run
     from management VRF - sudo ip netns exec ns-{MGMTVRF} pip install sendgrid
     Sendgrid Note: Settings > Mail Settings > Plain Content (Activate) will
-      allow you to send as true plaintext (keeps formatting). 
-
-Example switch config, assumes sourcing from MGMT VRF. If not needing 
+      allow you to send as true plaintext (keeps formatting).
+Standard SMTP Email notification:
+  uses EOS email client, example config:
+    email
+       from-user Arista-7@brokenpackets.com
+       server vrf MGMT smtp.sendgrid.net:587
+       auth username user
+       auth password pass
+       tls
+---------------------------
+Example switch config, assumes sourcing from MGMT VRF. If not needing
 to source from a VRF, use 'action bash python /mnt/flash/diffscript.py'
 
 event-handler CONFIGCHANGE
@@ -48,14 +58,16 @@ management api http-commands
   no shutdown
   protocol unix-socket
 '''
-##Secret Data
-sg_api_key = 'sendgrid API key'
-webhook_url = 'slack incoming webhook api key'
+## Secret Data
+sg_api_key = 'sendgrid API key' # If applicable
+webhook_url = 'slack incoming webhook api key' # If applicable
 ##
-### Leave these blank - probably a better way to avoid them.
-username = ''
-ip_addr = ''
-log_message = ''
+
+## EMAIL/Sendgrid Variables
+subject = "DiffConfig"
+sendgrid_from = "Arista-7@example.com"
+smtp_to = "user@example.com"
+##
 
 url = "unix:/var/run/command-api.sock"
 ss = jsonrpclib.Server(url)
@@ -74,27 +86,33 @@ if os.environ.get('EVENT_LOG_MSG'):
     username = username_regex.match(log_message).group(1)
     ip_addr = username_regex.match(log_message).group(2)
 
-response = ss.runCmds( 1, [ 'copy running-config file:tmp/.new_config' ] )
-# IF exist /tmp/.old_config, use that. Else, use /mnt/flash/startup-config
-if os.path.isfile('/tmp/.old_config'):
-    if os.path.getmtime('/mnt/flash/startup-config') < os.path.getmtime('/tmp/.old_config'):
-        pre_output = run_command(diff)
+    response = ss.runCmds( 1, [ 'copy running-config file:tmp/.new_config' ] )
+    # IF exist /tmp/.old_config, use that. Else, use /mnt/flash/startup-config
+    if os.path.isfile('/tmp/.old_config'):
+        if os.path.getmtime('/mnt/flash/startup-config') < os.path.getmtime('/tmp/.old_config'):
+            pre_output = run_command(diff)
+        else:
+            pre_output = run_command(backup_diff)
     else:
         pre_output = run_command(backup_diff)
-else:
-    pre_output = run_command(backup_diff)
-if pre_output:
-    output = pre_output.split('\n',2)[2]
-    if notifytype == 'email':
-        sg = sendgrid.SendGridAPIClient(sg_api_key)
-        from_email = Email("test@example.com")
-        to_email = Email("test@example.com")
-        subject = "DiffConfig"
-        content = Content("text/plain", 'Configured by *'+username+'*, at *'
-                  +ip_addr+'*\n'+output)
-        mail = Mail(from_email, subject, to_email, content)
-        response = sg.client.mail.send.post(request_body=mail.get())
-    if notifytype == 'slack':
-        webhook.webhook(hostname, webhook_url, 'Configured by *'+username+'*, at *'+
-        ip_addr+'*\n'+output)
-response = ss.runCmds( 1, [ 'copy running-config file:tmp/.old_config' ] )
+    if pre_output:
+        output = pre_output.split('\n',2)[2]
+        if notifytype == 'sendgrid':
+            sg = sendgrid.SendGridAPIClient(sg_api_key)
+            from_email = Email(sendgrid_from)
+            to_email = Email(smtp_to)
+            content = Content("text/plain", 'Configured by *'+username+'*, at *'
+                      +ip_addr+'*\n\n'+output)
+            mail = Mail(from_email, subject, to_email, content)
+            response = sg.client.mail.send.post(request_body=mail.get())
+        if notifytype == 'slack':
+            webhook.webhook(hostname, webhook_url, 'Configured by *'+username+'*, at *'+
+            ip_addr+'*\n'+output)
+        if notifytype == 'email':
+            if os.path.exists('/tmp/.lastdiff'):
+                os.remove('/tmp/.lastdiff')
+            f = open('/tmp/.lastdiff','w')
+            f.write('Configured by *'+username+'*, at *'+ip_addr+'*\n\n'+output)
+            f.close()
+            response = ss.runCmds( 1, [ 'more file:/tmp/.lastdiff | email -s '+subject+' -i '+smtp_to ], "text" )
+    response = ss.runCmds( 1, [ 'copy running-config file:tmp/.old_config' ] )
