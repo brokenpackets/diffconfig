@@ -11,12 +11,14 @@ Requirements:
 ---Notification Methods---  
 Slack Notification:  
   - webhook.py python module stored under /mnt/flash/  
+
 Sendgrid Notification:  
   - Sendgrid python module  
       - Install on switch with 'sudo pip install sendgrid' - may need to run  
         from management VRF - sudo ip netns exec ns-{MGMTVRF} pip install sendgrid  
       - Sendgrid Note: Settings > Mail Settings > Plain Content (Activate) will  
         allow you to send as true plaintext (keeps formatting).  
+
 Standard SMTP Email notification:  
   - uses EOS email client, example config:  
 ```
