@@ -2,7 +2,7 @@
 Watches for local configuration changes, performs a diff of new vs old config, and sends to desired notification method. Currently supports slack (webhook), sendgrid, and SMTP/Email.  
 
 Requirements:  
-  DNS Reachability to resolve email/sendgrid/webhook target
+  DNS Reachability to resolve email/sendgrid/webhook target  
   HTTPS Reachability to webhook target (if using Slack/sendgrid notify)  
   SMTP Reachability to email relay (if using email notify)  
   diffscript.py stored under /mnt/flash/  
