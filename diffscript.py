@@ -6,6 +6,9 @@ import jsonrpclib
 import os
 import socket
 import re
+
+####User Modifiable Variables
+
 ### Define transport:
 notifytype = 'email' # 'email', 'slack', or 'sendgrid'
 
@@ -15,6 +18,15 @@ if notifytype == 'sendgrid':
 
 if notifytype == 'slack':
     import webhook
+
+### Secret Data
+sg_api_key = 'sendgrid API key' # If applicable
+webhook_url = 'slack incoming webhook api key' # If applicable
+
+### EMAIL/Sendgrid Variables
+subject = "DiffConfig"
+sendgrid_from = "Arista-7@example.com" # Note: Email uses EOS-Configured variable.
+smtp_to = "user@example.com"
 
 '''
 Requirements:
@@ -58,23 +70,14 @@ management api http-commands
   no shutdown
   protocol unix-socket
 '''
-## Secret Data
-sg_api_key = 'sendgrid API key' # If applicable
-webhook_url = 'slack incoming webhook api key' # If applicable
-##
-
-## EMAIL/Sendgrid Variables
-subject = "DiffConfig"
-sendgrid_from = "Arista-7@example.com"
-smtp_to = "user@example.com"
-##
-
+### Do not modify these variables.
 url = "unix:/var/run/command-api.sock"
 ss = jsonrpclib.Server(url)
 diff = 'diff /tmp/.old_config /tmp/.new_config -U 4 -I ("Startup-config")|'
 backup_diff = 'diff /mnt/flash/startup-config /tmp/.new_config -U 4 -I "Startup-config" -I "! Startup-config last"'
 hostname = socket.gethostname()
 username_regex = re.compile('.* Configured from console by (.*?) on.*?\(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})')
+###
 
 def run_command(command):
     process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
